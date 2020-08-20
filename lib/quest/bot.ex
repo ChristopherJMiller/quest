@@ -3,12 +3,12 @@ defmodule Quest.Bot do
   require Logger
 
   alias Nostrum.Api
-  
+
   alias Quest.ServerManager
   alias Quest.QuestManager
   alias Quest.PartyManager
 
-  def start_link do
+  def start_link() do
     Consumer.start_link(__MODULE__)
   end
 
@@ -35,6 +35,10 @@ defmodule Quest.Bot do
     end
   end
 
+  def handle_event(_) do
+    :noop
+  end
+
   def handle_subcommand(msg, subcommand_params) do
     {subcommand, params} = List.pop_at(subcommand_params, 0)
     Logger.info(subcommand)
@@ -49,14 +53,7 @@ defmodule Quest.Bot do
       "config" -> ServerManager.handle_config_command(msg, params)
       "quest" -> QuestManager.handle_quest_command(msg, params)
       "party" -> PartyManager.handle_party_command(msg, params)
-      _ ->
-        :ignore
+      _ -> Api.create_message(msg.channel_id, "`!q init|config|quest|party`")
     end
-  end
-
-  # Default event handler, if you don't include this, your consumer WILL crash if
-  # you don't have a method definition for each event type.
-  def handle_event(_event) do
-    :noop
   end
 end

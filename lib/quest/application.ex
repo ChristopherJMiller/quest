@@ -6,12 +6,12 @@ defmodule Quest.Application do
   use Application
   require Logger
 
+  defp get_children(:test), do: [Quest.Repo]
+  defp get_children(_), do: [Quest.Repo, Quest.Bot]
+
   def start(_type, _args) do
     Logger.info "running"
-    children = [
-      Quest.Repo,
-      Quest.Bot
-    ]
+    children = get_children(Mix.env())
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
