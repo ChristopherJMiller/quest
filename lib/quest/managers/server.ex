@@ -31,6 +31,7 @@ defmodule Quest.ServerManager do
   def set_dm_role(server_id, params) do
     [role_str] = params
     role = role_str |> String.slice(3..-2)
+    Logger.info(role_str)
     server = Kernel.inspect(server_id)
     case server_exists(server) do
       nil -> :error
@@ -41,7 +42,7 @@ defmodule Quest.ServerManager do
   def set_post_channel(server_id, params) do
     [channel_str] = params
     channel = channel_str |> String.slice(2..-2)
-    Logger.info(channel)
+    Logger.info(channel_str)
     server = Kernel.inspect(server_id)
     case server_exists(server) do
       nil -> :error
@@ -53,7 +54,7 @@ defmodule Quest.ServerManager do
     {field, result} = List.pop_at(params, 0)
     Logger.info(field)
     response = case field do
-      "dmrole" -> 
+      "dmrole" ->
         case set_dm_role(msg.guild_id, result) do
           :ok -> "DM Role Configured"
           _ -> "An error occured, please check the bot console."
