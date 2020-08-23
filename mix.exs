@@ -8,6 +8,8 @@ defmodule Quest.MixProject do
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test],
       elixirc_paths: elixirc_paths(Mix.env()),
       aliases: aliases()
     ]
@@ -39,7 +41,8 @@ defmodule Quest.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
       {:nostrum, "~> 0.4", runtime: false},
-      {:mock, "~> 0.3.0", only: :test}
+      {:mock, "~> 0.3.0", only: :test},
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 end

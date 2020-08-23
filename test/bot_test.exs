@@ -9,6 +9,11 @@ defmodule BotTest do
   alias Quest.Server
   alias Quest.Repo
 
+  mock_test("start_link initializes Nostrum Consumer", [{Nostrum.Consumer, :working}]) do
+    Bot.start_link()
+    assert called Nostrum.Consumer.start_link(Bot)
+  end
+
   describe "handle_event MESSAGE_CREATE" do
     mock_test("ignores non-command messages", [{Nostrum.Api, :working}]) do
       msg = as_message("not a command")

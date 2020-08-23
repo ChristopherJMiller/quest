@@ -1,6 +1,8 @@
 defmodule Quest.Mock do
   import Mock
 
+  alias Quest.Bot
+
   # mock_list [{MODULE, :working}]
   defmacro mock_test(test_name, module_list, func) do
     quote do
@@ -11,6 +13,18 @@ defmodule Quest.Mock do
   end
 
   def as_message(content, channel_id \\ nil, server_id \\ nil), do: %Nostrum.Struct.Message{content: content, channel_id: channel_id, guild_id: server_id}
+  def as_reaction_map(emoji, guild_id, user_id), do: %{
+    guild_id: guild_id,
+    member: %{user: %{id: user_id}},
+    user_id: user_id,
+    emoji: %{name: emoji}
+  }
+
+  def bulk_call_msg([]), do: :done
+  def bulk_call_msg([msg | rest]) do
+    Bot.handle_event({:MESSAGE_CREATE, msg, nil})
+    bulk_call_msg(rest)
+  end
 
   @spec get_module_mocks(:working, Nostrum.Api | Nostrum.Consumer) :: [
           {:create_message, (any, any -> any)}

@@ -16,13 +16,13 @@ defmodule Quest.Bot do
 
   def handle_event({:MESSAGE_REACTION_ADD, m, _ws_state}) do
     if !is_user_bot(m.member.user.id) do
-      Logger.info(PartyManager.handle_reaction_event(:create, m))
+      PartyManager.handle_reaction_event(:create, m)
     end
   end
 
   def handle_event({:MESSAGE_REACTION_REMOVE, m, _ws_state}) do
     if !is_user_bot(m.user_id) do
-      Logger.info(PartyManager.handle_reaction_event(:destroy, m))
+      PartyManager.handle_reaction_event(:destroy, m)
     end
   end
 

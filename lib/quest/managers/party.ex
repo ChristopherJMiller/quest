@@ -45,6 +45,7 @@ defmodule Quest.PartyManager do
     end
   end
 
+  @spec id_to_role(any) :: Nostrum.Struct.Guild.Role.t()
   def id_to_role(id), do: %Nostrum.Struct.Guild.Role{id: id}
   def mention_party(party), do: Role.mention(id_to_role(Snowflake.cast!(party.role_id)))
   def format_party_item(party), do: "- " <> mention_party(party) <> ": ID `#{party.id}`\n"
@@ -86,7 +87,7 @@ defmodule Quest.PartyManager do
     server = Kernel.inspect(msg.guild_id)
     Logger.info(field)
     response = case field do
-      "create" -> 
+      "create" ->
         case create_party(msg.guild_id, result) do
           {:ok, party} -> "Created Party with ID `#{party.id}`"
           _ -> "An error occured, please check the bot console."
