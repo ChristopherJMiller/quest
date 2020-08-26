@@ -164,10 +164,10 @@ defmodule Quest.QuestManager do
 
   def helper_text(), do: "`!q quest <create|edit|status|post>`"
 
-  def handle_quest_command(server, msg, params) do
+  def handle_quest_command(server, params) do
     [subcommand, quest_id | subcommand_params] = pad(params, 3)
     quest_exists = get_quest_by_id(quest_id)
-    response = case {quest_exists, subcommand} do
+    case {quest_exists, subcommand} do
       # No params, helper
       {nil, nil} -> helper_text()
 
@@ -193,6 +193,5 @@ defmodule Quest.QuestManager do
       # For Malformed entries
       _ -> helper_text()
     end
-    Api.create_message(msg.channel_id, response)
   end
 end

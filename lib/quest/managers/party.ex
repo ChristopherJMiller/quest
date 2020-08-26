@@ -85,13 +85,13 @@ defmodule Quest.PartyManager do
     end
   end
 
-  def handle_party_command(server, msg, params) do
+  def handle_party_command(server, params) do
     [field | result] = pad(params, 2)
     Logger.info(field)
     Logger.info(result)
-    response = case field do
+    case field do
       "create" ->
-        case create_party(msg.guild_id, result) do
+        case create_party(server.server_id, result) do
           {:ok, party} -> "Created Party with ID `#{party.id}`"
           _ -> "An error occured, please check the bot console."
         end
@@ -99,6 +99,5 @@ defmodule Quest.PartyManager do
       _ ->
         "`!q party <list|create>`"
     end
-    Api.create_message(msg.channel_id, response)
   end
 end

@@ -43,10 +43,10 @@ defmodule Quest.ServerManager do
     end
   end
 
-  def handle_config_command(server, msg, params) do
+  def handle_config_command(server, params) do
     {field, sub_params} = List.pop_at(params, 0)
     Logger.info(field)
-    response = case field do
+    case field do
       "dmrole" ->
         case set_dm_role(server, sub_params) do
           :ok -> "DM Role Configured"
@@ -60,6 +60,5 @@ defmodule Quest.ServerManager do
       _ ->
         "`!q config <dmrole|postboard> <discord reference to role/channel>`"
     end
-    Api.create_message(msg.channel_id, response)
   end
 end

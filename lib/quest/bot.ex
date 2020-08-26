@@ -46,20 +46,20 @@ defmodule Quest.Bot do
     [subcommand | params] = pad(subcommand_params, 2)
     Logger.info(subcommand)
     server_inited = ServerManager.get_server_by_id(msg.guild_id)
-    case {server_inited, subcommand} do
-      {nil, nil} -> Api.create_message(msg.channel_id, help_text())
+    response = case {server_inited, subcommand} do
+      {nil, nil} -> help_text()
       {_, "init"} ->
-        response = case ServerManager.init_server(msg.guild_id) do
+        case ServerManager.init_server(msg.guild_id) do
           :ok -> "Server initialized successfully!"
           :exists -> "This Server has already been initialized with Quest."
           _ -> "An error occured, please check the bot console."
         end
-        Api.create_message(msg.channel_id, response)
-      {nil, _command} -> Api.create_message(msg.channel_id, "Please initialize the server before interfacing with Quest.")
-      {server, "config"} -> server |> ServerManager.handle_config_command(msg, params)
-      {server, "quest"} -> server |> QuestManager.handle_quest_command(msg, params)
-      {server, "party"} -> server |> PartyManager.handle_party_command(msg, params)
-      _ -> Api.create_message(msg.channel_id, help_text())
+      {nil, _command} -> "Please initialize the server before interfacing with Quest."
+      {server, "config"} -> server |> ServerManager.handle_config_command(params)
+      {server, "quest"} -> server |> QuestManager.handle_quest_command(params)
+      {server, "party"} -> server |> PartyManager.handle_party_command(params)
+      _ -> help_text()
     end
+    Api.create_message(msg.channel_id, response)
   end
 end
