@@ -3,7 +3,7 @@ defmodule Quest.Repo.Migrations.CreateQuest do
 
   def change do
     create table(:quests) do
-      add :server_id, :string
+      add :server_id, :bigint
       add :title, :string
       add :description, :string
       add :location, :string

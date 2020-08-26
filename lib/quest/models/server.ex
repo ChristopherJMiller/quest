@@ -3,9 +3,9 @@ defmodule Quest.Server do
   import Ecto.Changeset
 
   schema "servers" do
-    field :server_id, :string
-    field :dm_role, :string
-    field :post_channel_id, :string
+    field :server_id, :integer
+    field :dm_role, :integer
+    field :post_channel_id, :integer
   end
 
   def changeset(server, params \\ %{}) do

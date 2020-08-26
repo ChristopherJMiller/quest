@@ -3,8 +3,8 @@ defmodule Quest.Repo.Migrations.CreateParty do
 
   def change do
     create table(:parties) do
-      add :server_id, :string
-      add :role_id, :string
+      add :server_id, :bigint
+      add :role_id, :bigint
     end
   end
 end

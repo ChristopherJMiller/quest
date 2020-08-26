@@ -3,8 +3,8 @@ defmodule Quest.Repo.Migrations.CreateServer do
 
   def change do
     create table(:servers) do
-      add :server_id, :string
-      add :dm_role, :string
+      add :server_id, :bigint
+      add :dm_role, :bigint
     end
   end
 end

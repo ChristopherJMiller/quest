@@ -12,6 +12,7 @@ defmodule ServerTest do
 
   describe "!q config integration" do
     mock_test("!q config with no subcommand displays help", [{Nostrum.Api, :working}]) do
+      ServerManager.init_server(5)
       msg = as_message("!q config", 5, 5)
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
@@ -25,9 +26,9 @@ defmodule ServerTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      found_dm_role = Repo.get_by!(Server, server_id: "5").dm_role
+      found_dm_role = Repo.get_by!(Server, server_id: 5).dm_role
 
-      assert found_dm_role == "1234"
+      assert found_dm_role == 1234
       assert called Nostrum.Api.create_message(5, "DM Role Configured")
     end
 
@@ -37,9 +38,9 @@ defmodule ServerTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      found_channel = Repo.get_by!(Server, server_id: "5").post_channel_id
+      found_channel = Repo.get_by!(Server, server_id: 5).post_channel_id
 
-      assert found_channel == "1234"
+      assert found_channel == 1234
       assert called Nostrum.Api.create_message(5, "Post Channel Configured")
     end
   end

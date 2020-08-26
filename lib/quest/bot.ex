@@ -1,12 +1,13 @@
 defmodule Quest.Bot do
   use Nostrum.Consumer
+  import Quest.ParamHelper
   require Logger
 
   alias Nostrum.Api
 
-  alias Quest.ServerManager
   alias Quest.QuestManager
   alias Quest.PartyManager
+  alias Quest.ServerManager
 
   def start_link() do
     Consumer.start_link(__MODULE__)
@@ -39,21 +40,26 @@ defmodule Quest.Bot do
     :noop
   end
 
+  def help_text(), do: "`!q init|config|quest|party`"
+
   def handle_subcommand(msg, subcommand_params) do
-    {subcommand, params} = List.pop_at(subcommand_params, 0)
+    [subcommand | params] = pad(subcommand_params, 2)
     Logger.info(subcommand)
-    case subcommand do
-      "init" ->
+    server_inited = ServerManager.get_server_by_id(msg.guild_id)
+    case {server_inited, subcommand} do
+      {nil, nil} -> Api.create_message(msg.channel_id, help_text())
+      {_, "init"} ->
         response = case ServerManager.init_server(msg.guild_id) do
           :ok -> "Server initialized successfully!"
           :exists -> "This Server has already been initialized with Quest."
           _ -> "An error occured, please check the bot console."
         end
         Api.create_message(msg.channel_id, response)
-      "config" -> ServerManager.handle_config_command(msg, params)
-      "quest" -> QuestManager.handle_quest_command(msg, params)
-      "party" -> PartyManager.handle_party_command(msg, params)
-      _ -> Api.create_message(msg.channel_id, "`!q init|config|quest|party`")
+      {nil, _command} -> Api.create_message(msg.channel_id, "Please initialize the server before interfacing with Quest.")
+      {server, "config"} -> server |> ServerManager.handle_config_command(msg, params)
+      {server, "quest"} -> server |> QuestManager.handle_quest_command(msg, params)
+      {server, "party"} -> server |> PartyManager.handle_party_command(msg, params)
+      _ -> Api.create_message(msg.channel_id, help_text())
     end
   end
 end

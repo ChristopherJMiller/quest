@@ -42,7 +42,8 @@ defmodule Quest.Mock do
   ]
 
   def get_module_mocks(:not_working, Quest.ServerManager), do: [
-    init_server: fn(_) -> :error end
+    init_server: fn(_) -> :error end,
+    get_server_by_id: fn(_) -> nil end
   ]
 
   def get_module_mocks(_, _), do: raise "Expected Defined State, Module Pair"

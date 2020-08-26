@@ -2,9 +2,11 @@ defmodule Quest.Party do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Quest.Server
+
   schema "parties" do
-    field :server_id, :string
-    field :role_id, :string
+    belongs_to :server, Server
+    field :role_id, :integer
   end
 
   def changeset(party, params \\ %{}) do

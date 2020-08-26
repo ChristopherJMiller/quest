@@ -4,19 +4,17 @@ defmodule Quest.PostManager do
   alias Quest.Repo
   alias Quest.Post
 
-  alias Quest.ServerManager
   alias Quest.QuestManager
 
   alias Nostrum.Api
-  alias Nostrum.Snowflake
 
   def join_button(), do: "⏩"
 
   def get_post_by_message_id(message_id), do: Post |> Repo.get_by(post_id: message_id)
   def delete_post(post), do: Repo.delete(post)
 
-  def quest_published(quest_id) do
-    Post |> Repo.get_by(quest_id: quest_id)
+  def quest_published(quest) do
+    quest.post
   end
 
   def create_post_db(post_id, server_id, quest_id) do
@@ -24,28 +22,24 @@ defmodule Quest.PostManager do
       |> Repo.insert
   end
 
-  def remove_post(server_id, params) do
-    {quest_id, _rest} = List.pop_at(params, 0)
-    case quest_published(quest_id) do
-      nil -> "Quest Not Posted"
-      post -> case Api.delete_message(Snowflake.cast!(ServerManager.get_server!(server_id).post_channel_id), Snowflake.cast!(post.post_id)) do
-        {:ok} -> case delete_post(post) do
-          {:ok, _} -> "Successfully unpublished post"
-          nil -> "An unexpected error occured when trying to remove the post from the DB."
-        end
-        _ -> case clean_post(nil, post.id) do
-          _ -> "Attempted to clean post, ensure message is removed from post board."
-        end
+  def remove_post(quest, server) do
+    case Api.delete_message(server.post_channel_id, quest.post.post_id) do
+      {:ok} -> case delete_post(quest.post) do
+        {:ok, _} -> "Successfully unpublished post"
+        nil -> "An unexpected error occured when trying to remove the post from the DB."
+      end
+      _ -> case clean_post(nil, quest.post.id) do
+        _ -> "Attempted to clean post, ensure message is removed from post board."
       end
     end
   end
 
   def update_quest_post(quest) do
-    case quest_published(quest.id) do
+    case quest_published(quest) do
       nil -> "Quest status updated"
-      post -> case Api.edit_message(Snowflake.cast!(ServerManager.get_server!(post.server_id).post_channel_id), Snowflake.cast!(post.post_id), QuestManager.quest_block(quest)) do
+      post -> case Api.edit_message(post.server.post_channel_id, post.post_id, QuestManager.quest_block(quest)) do
         {:ok, _msg} -> "Quest status and post updated."
-        _ -> "An error occured when modifying the posting. Quest status still updated." 
+        _ -> "An error occured when modifying the posting. Quest status still updated."
       end
     end
   end
@@ -54,12 +48,12 @@ defmodule Quest.PostManager do
     Nostrum.Api.create_reaction(msg.channel_id(), msg.id(), join_button())
   end
 
-  def clean_post(msg, known_post_id) do
+  def clean_post(nil), do: :error
+  def clean_post(msg), do: Api.delete_message(msg)
+  def clean_post(post, msg) do
     try do
-      case Post |> Repo.get(known_post_id) do
-        post -> Repo.delete(post)
-      end
-      Api.delete_message(msg)
+      clean_post(msg)
+      Repo.delete(post)
       :ok
     catch
       _ -> :error
@@ -67,41 +61,32 @@ defmodule Quest.PostManager do
   end
 
   def make_post(server, quest, channel_id) do
-    case Api.create_message(Snowflake.cast!(channel_id), QuestManager.quest_block(quest)) do
-      {:ok, msg} -> case create_post_db(msg.id, server.server_id, quest.id) do
-        {:ok, post} -> case prepare_enlist_reactions(msg) do
-          {:ok} -> "Quest posted successfully"
-          _ -> case clean_post(msg, post.id) do
-            :ok -> "An error occured while saving the quest posting. Posting failed. (Failed on Reaction Adding)"
-            :error -> "An error occured and could not recover"
-          end
+    case Api.create_message(channel_id, QuestManager.quest_block(quest)) do
+      {:ok, msg} -> case {create_post_db(msg.id, server.server_id, quest.id), prepare_enlist_reactions(msg)} do
+        {{:ok, _post}, {:ok}} -> "Quest posted successfully"
+        {{:ok, post}, _} -> case clean_post(msg, post) do
+          :ok -> "Posting failed. Failed adding reactions."
+          :error -> "An error occured and could not recover"
         end
-        _ -> case clean_post(msg, nil) do
-          {:ok} -> "An error occured while saving the quest posting. Posting failed."
-          _ -> "An error occured and was unable to recover."
+        _ -> case clean_post(msg) do
+          :ok -> "An error occured while saving the quest posting. Posting failed."
+          :error -> "An error occured and could not recover"
         end
       end
-      _ -> "Failed to post, an error has occured while posting."
+      _ -> "Failed to post, an error has occured while attempting to post."
     end
   end
 
-  def post_quest(server_id, params) do
-    {quest_id, _rest} = List.pop_at(params, 0)
-    case quest_published(quest_id) do
-      nil -> case ServerManager.server_exists(server_id) do
-        nil -> "Server has not been Initialized"
-        server -> case QuestManager.quest_exists(quest_id) do
-          nil -> "Invalid Quest ID"
-          quest -> case QuestManager.is_quest_healthy(quest) do
-            {:unhealthy, issues} -> "Failed to Post. The Quest has the following issues:" <> QuestManager.bullet_point(issues)
-            {:healthy, _} -> case server.post_channel_id do
-              nil -> "Server Post Channel not configured"
-              channel_id -> make_post(server, quest, channel_id)
-            end
-          end
-        end
-      end
-      _ -> "Quest is already posted."
+  def post_quest(quest, server) do
+    is_published = quest_published(quest)
+    is_healthy = QuestManager.is_quest_healthy(quest)
+    post_channel_configured = server.post_channel_id
+
+    case {post_channel_configured, is_published, is_healthy} do
+      {nil, _, _} -> "Server Post Channel not configured, please configure before continuing."
+      {_, _, {:unhealthy, issues}} -> "Failed to Post. The Quest has the following issues:" <> QuestManager.bullet_point(issues)
+      {channel_id, nil, {:healthy, _}} -> make_post(server, quest, channel_id)
+      {_, _published_post, _} -> "Quest is already posted"
     end
   end
 end

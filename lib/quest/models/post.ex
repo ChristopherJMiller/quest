@@ -2,10 +2,13 @@ defmodule Quest.Post do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Quest.Server
+  alias Quest.Quest
+
   schema "posts" do
-    field :server_id, :string
-    field :post_id, :string
-    field :quest_id, :integer
+    field :post_id, :integer
+    belongs_to :server, Server
+    belongs_to :quest, Quest
   end
 
   def changeset(post, params \\ %{}) do

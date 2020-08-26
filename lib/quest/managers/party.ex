@@ -1,9 +1,9 @@
 defmodule Quest.PartyManager do
   import Ecto.Query
+  import Quest.ParamHelper
   require Logger
 
   alias Quest.PostManager
-  alias Quest.QuestManager
   alias Quest.ServerManager
   alias Quest.PartyMember
 
@@ -12,12 +12,9 @@ defmodule Quest.PartyManager do
 
   alias Nostrum.Struct.Guild.Role
   alias Nostrum.Api
-  alias Nostrum.Snowflake
 
-  def get_role_id_by_quest!(quest_id), do: Party |> Repo.get!(QuestManager.get_quest!(quest_id).party_id)
-
-  def get_server_parties(server_id) do
-    from(p in Party, where: p.server_id == ^server_id) |> Repo.all
+  def get_server_parties(server) do
+    from(p in Party, where: p.server_id == ^server.server_id) |> Repo.all
   end
 
   def db_create_party(changeset) do
@@ -28,8 +25,6 @@ defmodule Quest.PartyManager do
   def remove_role(server, user, role), do: Api.remove_guild_member_role(server, user, role)
 
   def get_all_party_members!(role_id), do: from(p in PartyMember, where: p.role_id == ^role_id) |> Repo.all
-  def get_party_member!(role_id, user_id), do: PartyMember |> Repo.get_by!(%{role_id: role_id, user_id: user_id})
-  def db_destroy_party_member(party_member), do: Repo.delete(party_member)
   def db_create_party_member(changeset) do
     PartyMember.changeset(%PartyMember{}, changeset)
       |> Repo.insert
@@ -39,53 +34,61 @@ defmodule Quest.PartyManager do
     [role_str] = params
     role = role_str |> String.slice(3..-2)
     server = Kernel.inspect(server_id)
-    case ServerManager.server_exists(server) do
+    case ServerManager.get_server_by_id(server) do
       nil -> :error
       _ -> db_create_party(%{server_id: server, role_id: role})
     end
   end
 
-  @spec id_to_role(any) :: Nostrum.Struct.Guild.Role.t()
   def id_to_role(id), do: %Nostrum.Struct.Guild.Role{id: id}
-  def mention_party(party), do: Role.mention(id_to_role(Snowflake.cast!(party.role_id)))
+  def mention_party(party) when is_nil(party), do: ""
+  def mention_party(party), do: party.role_id |> id_to_role |> Role.mention
   def format_party_item(party), do: "- " <> mention_party(party) <> ": ID `#{party.id}`\n"
 
-  def list_parties(server_id) do
-    get_server_parties(server_id) |> List.foldl("Party List:\n", fn x, acc -> acc <> format_party_item(x) end)
+  def list_parties(server) do
+    get_server_parties(server) |> List.foldl("Party List:\n", fn x, acc -> acc <> format_party_item(x) end)
   end
 
-  def handle_reaction_event(operation, msg) do
-    quest_post = PostManager.get_post_by_message_id(Kernel.inspect(msg.message_id()))
-    quest = QuestManager.get_quest!(quest_post.quest_id)
-    server = Kernel.inspect(msg.guild_id())
-    is_join_emoji = msg.emoji.name == PostManager.join_button()
-    case {quest.status, operation, quest_post, is_join_emoji} do
-      {3, _, _, _} -> :ignore
-      {_, _, nil, _} -> :ignore
-      {_, :create, post, true} -> case Api.add_guild_member_role(msg.guild_id(), msg.member.user.id(), get_role_id_by_quest!(post.quest_id).role_id |> Snowflake.cast!) do
-        {:ok} -> case db_create_party_member(%{server_id: server, user_id: Kernel.inspect(msg.member.user.id()), role_id: get_role_id_by_quest!(post.quest_id).role_id}) do
-          {:ok, _} -> :ok
-          _ -> case Api.remove_guild_member_role(msg.guild_id, msg.user_id, get_role_id_by_quest!(post.quest_id).role_id |> Snowflake.cast!) do
-            {:ok} -> :ok
-            _ -> :error
-          end
-        end
+  def delete_party_member(msg, quest, user_id) do
+    server = msg.guild_id
+    case Api.remove_guild_member_role(server, user_id, quest.party.role_id) do
+      {:ok} -> case PartyMember |> Repo.get_by(%{user_id: user_id, party_id: quest.party.id}) |> Repo.delete do
+        {:ok, _} -> :ok
         _ -> :error
       end
-      {_, :destroy, post, true} -> case Api.remove_guild_member_role(msg.guild_id, msg.user_id, get_role_id_by_quest!(post.quest_id).role_id |> Snowflake.cast!) do
-        {:ok} -> case get_role_id_by_quest!(post.quest_id).role_id |> get_party_member!(Kernel.inspect(msg.user_id)) |> db_destroy_party_member do
-          {:ok, _} -> :ok
-          _ -> :error
-        end
-        _ -> :error
-      end
+      _ -> :error
     end
   end
 
-  def handle_party_command(msg, params) do
-    {field, result} = List.pop_at(params, 0)
-    server = Kernel.inspect(msg.guild_id)
+  def create_party_member(msg, quest, user_id) do
+    server = msg.guild_id
+    case Api.add_guild_member_role(server, user_id, quest.party.role_id) do
+      {:ok} -> case db_create_party_member(%{server_id: server, user_id: user_id, role_id: quest.party.role_id}) do
+        {:ok, _} -> :ok
+        _ ->
+          delete_party_member(msg, quest, user_id)
+          :error
+      end
+      _ -> :error
+    end
+  end
+
+  def handle_reaction_event(operation, msg) do
+    post = PostManager.get_post_by_message_id(msg.message_id())
+    quest = post.quest
+    is_join_emoji = msg.emoji.name == PostManager.join_button()
+    case {quest.status, operation, post, is_join_emoji} do
+      {3, _, _, _} -> :ignore
+      {_, _, nil, _} -> :ignore
+      {_, :create, _post, true} -> create_party_member(msg, quest, msg.member.user.id)
+      {_, :destroy, _post, true} -> delete_party_member(msg, quest, msg.user_id)
+    end
+  end
+
+  def handle_party_command(server, msg, params) do
+    [field | result] = pad(params, 2)
     Logger.info(field)
+    Logger.info(result)
     response = case field do
       "create" ->
         case create_party(msg.guild_id, result) do
