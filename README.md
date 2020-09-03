@@ -8,6 +8,7 @@ A discord bot to manage a [West Marches](https://www.youtube.com/watch?v=oGAC-gB
 
 - [Elixir ~1.10](https://elixir-lang.org/install.html)
 - A Container Engine and Compose Runner (We recommend [podman](https://podman.io/) with [podman-compose](https://github.com/containers/podman-compose))
+  - If you use Arch Linux, the [podman](https://www.archlinux.org/packages/community/x86_64/podman/) and [podman-compose](https://www.archlinux.org/packages/community/any/podman-compose/) packages are avaliable to you.
 - [A Discord Bot Token](https://discord.com/developers)
 
 ## Environment Setup
