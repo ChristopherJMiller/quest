@@ -13,7 +13,7 @@ defmodule Quest.PartyMember do
 
   def changeset(party_member, params \\ %{}) do
     party_member
-    |> cast(params, [:server_id, :role_id, :user_id])
+    |> cast(params, [:server_id, :party_id, :user_id])
     |> unique_constraint(:server_id)
   end
 end

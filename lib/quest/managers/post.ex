@@ -14,11 +14,11 @@ defmodule Quest.PostManager do
   def delete_post(post), do: Repo.delete(post)
 
   def quest_published(quest) do
-    quest.post
+    Repo.preload(quest, :post).post
   end
 
   def create_post_db(post_id, server_id, quest_id) do
-    Post.changeset(%Post{}, %{server_id: server_id, quest_id: quest_id, post_id: Kernel.inspect(post_id)})
+    Post.changeset(%Post{}, %{server_id: server_id, quest_id: quest_id, post_id: post_id})
       |> Repo.insert
   end
 

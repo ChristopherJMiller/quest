@@ -14,6 +14,5 @@ defmodule Quest.Post do
   def changeset(post, params \\ %{}) do
     post
     |> cast(params, [:server_id, :post_id, :quest_id])
-    |> unique_constraint(:server_id)
   end
 end

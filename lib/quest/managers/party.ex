@@ -63,7 +63,7 @@ defmodule Quest.PartyManager do
   def create_party_member(msg, quest, user_id) do
     server = msg.guild_id
     case Api.add_guild_member_role(server, user_id, quest.party.role_id) do
-      {:ok} -> case db_create_party_member(%{server_id: server, user_id: user_id, role_id: quest.party.role_id}) do
+      {:ok} -> case db_create_party_member(%{server_id: server, user_id: user_id, party_id: quest.party.id}) do
         {:ok, _} -> :ok
         _ ->
           delete_party_member(msg, quest, user_id)
@@ -74,8 +74,8 @@ defmodule Quest.PartyManager do
   end
 
   def handle_reaction_event(operation, msg) do
-    post = PostManager.get_post_by_message_id(msg.message_id())
-    quest = post.quest
+    post = PostManager.get_post_by_message_id(msg.message_id()) |> Repo.preload(:quest)
+    quest = post.quest |> Repo.preload(:party)
     is_join_emoji = msg.emoji.name == PostManager.join_button()
     case {quest.status, operation, post, is_join_emoji} do
       {3, _, _, _} -> :ignore

@@ -20,16 +20,16 @@ defmodule Quest.ServerManager do
       |> Kernel.elem(0)
   end
 
-  defp set_dm_role(nil, _), do: :error
-  defp set_dm_role(server, params) do
+  def set_dm_role(nil, _), do: :error
+  def set_dm_role(server, params) do
     [role_str] = params
     role = role_str |> String.slice(3..-2)
     Logger.info(role_str)
     update_server(server, %{dm_role: role})
   end
 
-  defp set_post_channel(nil, _), do: :error
-  defp set_post_channel(server, params) do
+  def set_post_channel(nil, _), do: :error
+  def set_post_channel(server, params) do
     [channel_str] = params
     channel = channel_str |> String.slice(2..-2)
     Logger.info(channel_str)

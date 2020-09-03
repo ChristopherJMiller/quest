@@ -12,9 +12,10 @@ defmodule Quest.Mock do
     end
   end
 
-  def as_message(content, channel_id \\ nil, server_id \\ nil), do: %Nostrum.Struct.Message{content: content, channel_id: channel_id, guild_id: server_id}
-  def as_reaction_map(emoji, guild_id, user_id), do: %{
+  def as_message(content, channel_id \\ nil, server_id \\ nil), do: %Nostrum.Struct.Message{id: 1, content: content, channel_id: channel_id, guild_id: server_id}
+  def as_reaction_map(emoji, guild_id, channel_id, user_id), do: %{
     guild_id: guild_id,
+    channel_id: channel_id,
     member: %{user: %{id: user_id}},
     user_id: user_id,
     emoji: %{name: emoji}
@@ -26,15 +27,13 @@ defmodule Quest.Mock do
     bulk_call_msg(rest)
   end
 
-  @spec get_module_mocks(:working, Nostrum.Api | Nostrum.Consumer) :: [
-          {:create_message, (any, any -> any)}
-          | {:delete_message, (any, any -> any)}
-          | {:start_link, (any -> any)},
-          ...
-        ]
   def get_module_mocks(:working, Nostrum.Api), do: [
     delete_message: fn(_s, _m) -> {:ok} end,
-    create_message: fn(_c, m) -> {:ok, as_message(m)} end
+    create_message: fn(c, m) -> {:ok, as_message(m, c)} end,
+    edit_message: fn(_c, _p, m) -> {:ok, as_message(m)} end,
+    create_reaction: fn(_c, _p, _r) -> {:ok} end,
+    remove_guild_member_role: fn(_g, _u, _r) -> {:ok} end,
+    add_guild_member_role: fn(_g, _u, _r) -> {:ok} end
   ]
 
   def get_module_mocks(:working, Nostrum.Consumer), do: [

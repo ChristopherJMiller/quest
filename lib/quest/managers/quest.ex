@@ -10,10 +10,6 @@ defmodule Quest.QuestManager do
   alias Quest.Repo
   alias Quest.Quest
 
-  alias Nostrum.Api
-  alias Nostrum.Snowflake
-
-
   def init_quest(server) do
     Quest.changeset(%Quest{}, %{server_id: server.server_id, status: 0})
       |> Repo.insert
@@ -82,10 +78,10 @@ defmodule Quest.QuestManager do
 
 
   defp get_party_mention(quest) do
-    preloaded = Repo.preload(quest, :party)
+    preloaded = Repo.preload quest, :party
     case preloaded.party do
       nil -> "No Party Set"
-      party -> party.role_id |> PartyManager.mention_party
+      party -> party |> PartyManager.mention_party
     end
   end
 
@@ -149,7 +145,7 @@ defmodule Quest.QuestManager do
 
   def clear_party_members([], _) do end
   def clear_party_members([party_member | rest], server) do
-    PartyManager.remove_role(server |> Snowflake.cast!, party_member.user_id |> Snowflake.cast!, party_member.role_id |> Snowflake.cast!)
+    PartyManager.remove_role(server, party_member.user_id, party_member.role_id)
     Repo.delete(party_member)
     clear_party_members(rest, server)
   end
