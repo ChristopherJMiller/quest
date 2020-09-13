@@ -1,0 +1,8 @@
+addReviewers: true
+addAssignees: false
+
+reviewers:
+  - JaredHerbert11
+  - ChristopherJMiller
+
+numberOfReviewers: 0
