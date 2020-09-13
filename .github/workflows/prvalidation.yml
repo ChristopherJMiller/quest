@@ -28,8 +28,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install Hex
+        run: mix local.hex --force
+
       - name: Install Dependencies
-        run: mix deps.get
+        run: mix deps.get --force
 
       - name: Run Tests
         run: mix coveralls.html
