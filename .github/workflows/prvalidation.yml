@@ -45,7 +45,11 @@ jobs:
         run: mix deps.get --force
 
       - name: Run Tests
-        run: DB_HOSTNAME=postgres mix coveralls.html
+        run: DB_HOSTNAME=postgres mix coveralls.html --raise
+
+      - name: Test Failure Report
+        run: DB_HOSTNAME=postgres mix test --failed
+        if: ${{ failure() }}
 
       - name: Publish Coverage Results
         uses: actions/upload-artifact@v2
