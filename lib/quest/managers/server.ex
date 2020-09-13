@@ -48,14 +48,22 @@ defmodule Quest.ServerManager do
     Logger.info(field)
     case field do
       "dmrole" ->
-        case set_dm_role(server, sub_params) do
-          :ok -> "DM Role Configured"
-          _ -> "An error occured, please check the bot console."
+        case sub_params do
+          [] ->  "Enter the name of the DM role in the command. Ex: `!q config dmrole @DM`"
+          _ ->
+            case set_dm_role(server, sub_params) do
+              :ok -> "DM Role Configured"
+              _ -> "An error occured, please check the bot console."
+            end
         end
       "postboard" ->
-        case set_post_channel(server, sub_params) do
-          :ok -> "Post Channel Configured"
-          _ -> "An error occured, please check the bot console."
+        case sub_params do
+          [] -> "Enter the name of the text channel that you want to configure as the postboard. Ex: `!q config postboard #quest-board`"
+          _ -> 
+            case set_post_channel(server, sub_params) do
+              :ok -> "Post Channel Configured"
+              _ -> "An error occured, please check the bot console."
+            end
         end
       _ ->
         "`!q config <dmrole|postboard> <discord reference to role/channel>`"

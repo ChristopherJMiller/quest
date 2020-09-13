@@ -162,8 +162,10 @@ defmodule Quest.QuestManager do
 
   def handle_quest_command(server, params) do
     [subcommand, quest_id | subcommand_params] = pad(params, 3)
+    valid_quest_id = is_integer(quest_id)
     quest_exists = get_quest_by_id(quest_id)
     case {quest_exists, subcommand} do
+      # No integer in quest ID position
       # No params, helper
       {nil, nil} -> helper_text()
 
@@ -173,6 +175,8 @@ defmodule Quest.QuestManager do
           {:ok, quest} -> "Quest created. Reference with ID `#{quest.id}`"
           _ -> "An error occured, please check the bot console."
         end
+      
+      {_, "create"} -> "Cannot create a quest given additional parameters. To create a new quest, run `!q quest create`"
 
       # = QUEST GUARD =
       {nil, _command} -> "Quest does not exist. Please specify a valid ID."
