@@ -7,7 +7,7 @@ defmodule Quest.Post do
 
   schema "posts" do
     field :post_id, :integer
-    belongs_to :server, Server
+    belongs_to :server, Server, [references: :server_id]
     belongs_to :quest, Quest
   end
 

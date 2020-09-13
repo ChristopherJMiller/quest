@@ -28,7 +28,7 @@ defmodule Quest.PostManager do
         {:ok, _} -> "Successfully unpublished post"
         nil -> "An unexpected error occured when trying to remove the post from the DB."
       end
-      _ -> case clean_post(nil, quest.post.id) do
+      _ -> case clean_post(quest.post, nil) do
         _ -> "Attempted to clean post, ensure message is removed from post board."
       end
     end
@@ -37,7 +37,9 @@ defmodule Quest.PostManager do
   def update_quest_post(quest) do
     case quest_published(quest) do
       nil -> "Quest status updated"
-      post -> case Api.edit_message(post.server.post_channel_id, post.post_id, QuestManager.quest_block(quest)) do
+      post ->
+      updated_post = post |> Repo.preload(:server)
+      case Api.edit_message(updated_post.server.post_channel_id, post.post_id, QuestManager.quest_block(quest)) do
         {:ok, _msg} -> "Quest status and post updated."
         _ -> "An error occured when modifying the posting. Quest status still updated."
       end
@@ -48,15 +50,15 @@ defmodule Quest.PostManager do
     Nostrum.Api.create_reaction(msg.channel_id(), msg.id(), join_button())
   end
 
-  def clean_post(nil), do: :error
+  def clean_post(nil), do: {:error}
   def clean_post(msg), do: Api.delete_message(msg)
   def clean_post(post, msg) do
     try do
       clean_post(msg)
       Repo.delete(post)
-      :ok
+      {:ok}
     catch
-      _ -> :error
+      _ -> {:error}
     end
   end
 
@@ -64,13 +66,13 @@ defmodule Quest.PostManager do
     case Api.create_message(channel_id, QuestManager.quest_block(quest)) do
       {:ok, msg} -> case {create_post_db(msg.id, server.server_id, quest.id), prepare_enlist_reactions(msg)} do
         {{:ok, _post}, {:ok}} -> "Quest posted successfully"
-        {{:ok, post}, _} -> case clean_post(msg, post) do
-          :ok -> "Posting failed. Failed adding reactions."
-          :error -> "An error occured and could not recover"
+        {{:ok, post}, _} -> case clean_post(post, msg) do
+          {:ok} -> "Posting failed. Failed adding reactions."
+          {:error} -> "An error occured and could not recover"
         end
         _ -> case clean_post(msg) do
-          :ok -> "An error occured while saving the quest posting. Posting failed."
-          :error -> "An error occured and could not recover"
+          {:ok} -> "An error occured while saving the quest posting. Posting failed."
+          {:error} -> "An error occured and could not recover"
         end
       end
       _ -> "Failed to post, an error has occured while attempting to post."

@@ -24,7 +24,7 @@ defmodule Quest.PartyManager do
 
   def remove_role(server, user, role), do: Api.remove_guild_member_role(server, user, role)
 
-  def get_all_party_members!(role_id), do: from(p in PartyMember, where: p.role_id == ^role_id) |> Repo.all
+  def get_all_party_members!(party_id), do: from(p in PartyMember, where: p.party_id == ^party_id) |> Repo.all
   def db_create_party_member(changeset) do
     PartyMember.changeset(%PartyMember{}, changeset)
       |> Repo.insert
