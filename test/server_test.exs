@@ -38,7 +38,7 @@ defmodule ServerTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      assert called Nostrum.Api.create_message(5, "Enter the name of the DM role in the command. Ex: `!q config dmrole @DM`")
+      assert called Nostrum.Api.create_message(5, "Missing Role: Enter the name of the DM role in the command. Example: `!q config dmrole @DM`")
     end
 
     mock_test("!q config postboard sets a mentioned channel to post_channel_id", [{Nostrum.Api, :working}]) do
@@ -59,7 +59,7 @@ defmodule ServerTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      assert called Nostrum.Api.create_message(5, "Enter the name of the text channel that you want to configure as the postboard. Ex: `!q config postboard #quest-board`")
+      assert called Nostrum.Api.create_message(5, "Missing Text Channel: Enter the name of the text channel that you want to configure as the postboard. Example: `!q config postboard #quest-board`")
     end
   end
 end

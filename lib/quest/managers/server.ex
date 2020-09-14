@@ -49,7 +49,7 @@ defmodule Quest.ServerManager do
     case field do
       "dmrole" ->
         case sub_params do
-          [] ->  "Enter the name of the DM role in the command. Ex: `!q config dmrole @DM`"
+          [] ->  "Missing Role: Enter the name of the DM role in the command. Example: `!q config dmrole @DM`"
           _ ->
             case set_dm_role(server, sub_params) do
               :ok -> "DM Role Configured"
@@ -58,7 +58,7 @@ defmodule Quest.ServerManager do
         end
       "postboard" ->
         case sub_params do
-          [] -> "Enter the name of the text channel that you want to configure as the postboard. Ex: `!q config postboard #quest-board`"
+          [] -> "Missing Text Channel: Enter the name of the text channel that you want to configure as the postboard. Example: `!q config postboard #quest-board`"
           _ -> 
             case set_post_channel(server, sub_params) do
               :ok -> "Post Channel Configured"
