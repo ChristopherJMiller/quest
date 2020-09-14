@@ -18,7 +18,7 @@ defmodule QuestTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      assert called Nostrum.Api.create_message(5, "`!q quest <create|edit|status|post>`")
+      assert called Nostrum.Api.create_message(5, QuestManager.helper_text())
     end
 
     mock_test("!q quest create initializes a new quest to be edited", [{Nostrum.Api, :working}]) do
@@ -197,6 +197,21 @@ defmodule QuestTest do
       Bot.handle_event({:MESSAGE_CREATE, test, nil})
 
       assert called Nostrum.Api.create_message(5, "The supplied field is invalid. Valid fields include:" <> QuestManager.list_valid_fields())
+    end
+
+    mock_test("!q quest status shows the current representation and problems with a quest", [{Nostrum.Api, :working}]) do
+      ServerManager.init_server(5)
+      msg = as_message("!q quest create", 5, 5)
+
+      Bot.handle_event({:MESSAGE_CREATE, msg, nil})
+
+      quest = Repo.get_by!(Quest, server_id: 5).id
+      test = as_message("!q quest status #{quest}", 5, 5)
+      Bot.handle_event({:MESSAGE_CREATE, test, nil})
+
+      new_quest = Repo.get_by!(Quest, server_id: 5)
+
+      assert called Nostrum.Api.create_message(5, QuestManager.quest_block(new_quest) <> "\n\n" <> QuestManager.display_quest_health(new_quest))
     end
 
   end

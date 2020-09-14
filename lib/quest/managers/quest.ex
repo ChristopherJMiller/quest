@@ -182,17 +182,24 @@ defmodule Quest.QuestManager do
 
   def clear_party_members([], _) do end
   def clear_party_members([party_member | rest], server) do
-    PartyManager.remove_role(server, party_member.user_id, party_member.role_id)
+    PartyManager.remove_role(server, party_member.user_id, party_member.party_id)
     Repo.delete(party_member)
     clear_party_members(rest, server)
   end
 
   def complete_quest(quest, server) do
     modify_quest_status(quest, 3)
-    quest.party.role_id
+    quest.party.id
     |> PartyManager.get_all_party_members!
     |> clear_party_members(server.server_id)
     "Quest Completed"
+  end
+
+  def rescind_quest(quest, server) do
+    quest.party.id
+    |> PartyManager.get_all_party_members!
+    |> clear_party_members(server.server_id)
+    PostManager.remove_post(quest, server)
   end
 
   def helper_text(), do: "`!q quest <create|edit|status|post>`"
@@ -236,10 +243,10 @@ defmodule Quest.QuestManager do
       {quest, "edit"} -> quest |> handle_quest_edit(subcommand_params)
       {quest, "status"} -> quest |> quest_status(subcommand_params)
       {quest, "post"} -> quest |> PostManager.post_quest(server)
-      {quest, "rescind"} -> quest |> PostManager.remove_post(server)
-      {quest, "inprogress"} -> quest |> modify_quest_status(1)
-      {quest, "attempted"} -> quest |> modify_quest_status(2)
-      {quest, "complete"} -> quest |> complete_quest(server)
+      {quest, "rescind"} -> quest |> Repo.preload([:party, :post]) |> rescind_quest(server)
+      {quest, "inprogress"} -> quest |> Repo.preload([:server, :post]) |> modify_quest_status(1)
+      {quest, "attempted"} -> quest |> Repo.preload([:server, :post]) |> modify_quest_status(2)
+      {quest, "complete"} -> quest |> Repo.preload([:server, :post, :party]) |> complete_quest(server)
 
       # For Malformed entries
       _ -> helper_text()

@@ -28,12 +28,42 @@ defmodule Quest.Mock do
   end
 
   def get_module_mocks(:working, Nostrum.Api), do: [
+    delete_message: fn(_m) -> {:ok} end,
     delete_message: fn(_s, _m) -> {:ok} end,
     create_message: fn(c, m) -> {:ok, as_message(m, c)} end,
     edit_message: fn(_c, _p, m) -> {:ok, as_message(m)} end,
     create_reaction: fn(_c, _p, _r) -> {:ok} end,
     remove_guild_member_role: fn(_g, _u, _r) -> {:ok} end,
     add_guild_member_role: fn(_g, _u, _r) -> {:ok} end
+  ]
+
+  def get_module_mocks(:reactions_fail, Nostrum.Api), do: [
+    delete_message: fn(_m) -> {:ok} end,
+    delete_message: fn(_s, _m) -> {:ok} end,
+    create_message: fn(c, m) -> {:ok, as_message(m, c)} end,
+    edit_message: fn(_c, _p, m) -> {:ok, as_message(m)} end,
+    create_reaction: fn(_c, _p, _r) -> {:error} end,
+    remove_guild_member_role: fn(_g, _u, _r) -> {:ok} end,
+    add_guild_member_role: fn(_g, _u, _r) -> {:ok} end
+  ]
+
+  def get_module_mocks(:delete_fails, Nostrum.Api), do: [
+    delete_message: fn(_m) -> {:error} end,
+    delete_message: fn(_s, _m) -> {:error} end,
+    create_message: fn(c, m) -> {:ok, as_message(m, c)} end,
+    edit_message: fn(_c, _p, m) -> {:ok, as_message(m)} end,
+    create_reaction: fn(_c, _p, _r) -> {:ok} end,
+    remove_guild_member_role: fn(_g, _u, _r) -> {:ok} end,
+    add_guild_member_role: fn(_g, _u, _r) -> {:ok} end
+  ]
+
+  def get_module_mocks(:not_working, Nostrum.Api), do: [
+    create_message: fn(_c, _m) -> :error end
+  ]
+
+  def get_module_mocks(:failed_insert, Quest.Repo), do: [
+    insert: fn(_c) -> {:error, nil} end,
+    delete: fn(_c) -> {:ok} end
   ]
 
   def get_module_mocks(:working, Nostrum.Consumer), do: [
