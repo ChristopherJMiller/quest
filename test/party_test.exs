@@ -58,6 +58,26 @@ defmodule PartyTest do
       assert called Nostrum.Api.create_message(5, "Please utilize a valid role ID.")
     end
 
+    mock_test("!q party create <role> display help if no role is passed", [{Nostrum.Api, :working}]) do
+      ServerManager.init_server(5)
+
+      msg = as_message("!q party create", 5, 5)
+
+      Bot.handle_event({:MESSAGE_CREATE, msg, nil})
+
+      assert called Nostrum.Api.create_message(5, PartyManager.create_help())
+    end
+
+    mock_test("!q party create <role> only checks the first role parameter", [{Nostrum.Api, :working}]) do
+      ServerManager.init_server(5)
+
+      msg = as_message("!q party create <@&5678> morewords hello", 5, 5)
+
+      Bot.handle_event({:MESSAGE_CREATE, msg, nil})
+
+      assert called Nostrum.Api.create_message(5, "Please utilize a valid role ID.")
+    end
+
     mock_test("!q party list lists all avaliable parties", [{Nostrum.Api, :working}]) do
       Repo.delete_all(Party)
 
