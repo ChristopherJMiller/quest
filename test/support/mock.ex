@@ -20,6 +20,9 @@ defmodule Quest.Mock do
     user_id: user_id,
     emoji: %{name: emoji}
   }
+  def as_role(id), do: %{
+    id: id
+  }
 
   def bulk_call_msg([]), do: :done
   def bulk_call_msg([msg | rest]) do
@@ -34,7 +37,8 @@ defmodule Quest.Mock do
     edit_message: fn(_c, _p, m) -> {:ok, as_message(m)} end,
     create_reaction: fn(_c, _p, _r) -> {:ok} end,
     remove_guild_member_role: fn(_g, _u, _r) -> {:ok} end,
-    add_guild_member_role: fn(_g, _u, _r) -> {:ok} end
+    add_guild_member_role: fn(_g, _u, _r) -> {:ok} end,
+    get_guild_roles: fn(_g) -> {:ok, [as_role(1234)]} end
   ]
 
   def get_module_mocks(:reactions_fail, Nostrum.Api), do: [
