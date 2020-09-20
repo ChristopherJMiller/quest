@@ -65,8 +65,13 @@ defmodule Quest.ServerManager do
               _ -> "An error occured, please check the bot console."
             end
         end
+      "help" ->
+        "The config command is used to configure the DM role and quest board channel for your server. Subcommands include:\n" <>
+        "-`dmrole`: Use this subcommand to choose which Discord role Quest uses as the Dungeon Master Role. Example: `!q config dmrole @Dungeon Master`\n" <>
+        "-`postboard`: Use this subcommand to choose which text channel you want Quest to post quests to. Example: `!q config postboard #quest-board`\n" <>
+        "-`help`: This subcommand will display this block of text."
       _ ->
-        "`!q config <dmrole|postboard> <discord reference to role/channel>`"
+        "`!q config <dmrole|postboard> <discord reference to role/channel>` For further explanation, use `!q config help`"
     end
   end
 end

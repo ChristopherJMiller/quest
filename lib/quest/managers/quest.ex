@@ -40,6 +40,16 @@ defmodule Quest.QuestManager do
     end
   end
 
+  def edit_help(), do: "The edit subcommand is used to change modify the fields within a quest, given a quest ID. All quest edits will have the format: `!q quest edit <ID> <field> <value>`. Fields include: \n" <>
+                        "`title`: Title for the quest.\n" <>
+                        "`description`: Describe to the players what this quest is about.\n" <>
+                        "`location`: Where is the quest taking place?\n" <>
+                        "`level`: What level should the players be for this quest? Values for this field must be integers.\n" <>
+                        "`party_size`: What is the suggested party_size for this quest? Values for this field must be integers. \n" <>
+                        "`coin_loot`: What is the expected coin loot for this quest? The provided value must be an integer within the range 0-3. Valid coin levels are " <> list_valid_coin_levels() <> "\n" <>
+                        "`item_loot`: What is the highest expected rarity of items expected to be gained from this quest? The provided value must be an integer within the range 0-4. Valid item levels are " <> list_valid_item_levels() <> "\n" <>
+                        "`party_id`: Which party should take on this quest. Try to pick one that is not currently being used. The value must be an integer that corresponds to a registered role. To see what parties are configured on your server, use `!q party list`"
+
   def handle_quest_edit(_, params) when length(params) == 0, do: "Please enter a valid field and value. Valid fields include: " <> list_valid_fields()
   def handle_quest_edit(_, params) when length(params) == 1 do
     [field] = params
@@ -202,23 +212,35 @@ defmodule Quest.QuestManager do
     PostManager.remove_post(quest, server)
   end
 
-  def helper_text(), do: "`!q quest <create|edit|status|post>`"
+  def helper_text(), do: "`!q quest <create|edit|status|post|help>`"
 
   def validCommand(str), do: str in ["edit", "status", "post", "rescind", "inprogress", "attempted", "complete"]
 
   def handle_quest_command(server, params) do
     [subcommand, quest_id | subcommand_params] = pad(params, 3)
-    quest_exists = if (subcommand != "create" and (is_nil(quest_id) or is_numeric(quest_id))) or (subcommand == "create" and is_nil(quest_id)) do
+    quest_exists = cond do
+      (subcommand != "create" and (is_nil(quest_id) or is_numeric(quest_id))) or (subcommand == "create" and is_nil(quest_id)) -> 
         get_quest_by_id(quest_id)
-      else
-        :invalidID
-      end
+      subcommand == "edit" and quest_id == "help" -> 
+        :editHelp
+      true -> :invalidID
+    end
     case {quest_exists, subcommand} do
       # No integer in quest ID position
       # No params, helper
       {nil, nil} -> helper_text()
 
       # Commands that don't require an existing quest
+      {_, "help"} -> "The quest command is used to create, edit, and manage quests. Subcommands include:\n" <>
+                      "-`create`: This subcommand will create a new empty quest and provide you with its quest ID. No additional parameters are needed. Use: `!q quest create`.\n" <>
+                      "-`edit`: Use this subcommand to edit the attributes of a quest, given a quest ID. Use: `!q quest edit <ID> <field> <value>`. Use `!q quest edit help` for more information.\n" <>
+                      "-`status`: This subcommand will tell you whether a quest is ready to post or what needs to be changed before it is ready. Use `!q quest status <ID>`.\n" <>
+                      "-`post`: This subcommand will post a completed quest to the configured postboard for the server. If the quest is not ready to be posted, a help response will be given. Use: `!q quest post <ID>`.\n" <>
+                      "-`rescind`: This subcommand will remove a quest from the postboard. Use: `!q quest rescind <ID>`.\n" <>
+                      "-`inprogress`: This subcommand will change the status of the given quest to \"In Progress\". Use: `!q quest inprogress <ID>`.\n" <>
+                      "-`attempted`: If the party fails this quest, this subcommand will set the status of the quest to \"Attempted\". Players will be able to go back to this quest later. Use: `!q quest attempted <ID>`.\n" <>
+                      "-`complete`: If the party completes a quest, this subcommand will set the status of the quest to \"Complete\". Use: `!q quest complete <ID>`.\n" <>
+                      "-`help`: Displays this block of text."
       {:noID, "create"} ->
         case init_quest(server) do
           {:ok, quest} -> "Quest created. Reference with ID `#{quest.id}`"
@@ -240,6 +262,7 @@ defmodule Quest.QuestManager do
         end
 
       # Commands that require an existing quest
+      {:editHelp, "edit"} -> edit_help()
       {quest, "edit"} -> quest |> handle_quest_edit(subcommand_params)
       {quest, "status"} -> quest |> quest_status(subcommand_params)
       {quest, "post"} -> quest |> PostManager.post_quest(server)
