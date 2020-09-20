@@ -83,7 +83,7 @@ defmodule QuestTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      assert called Nostrum.Api.create_message(5, "`!q quest <create|edit|status|post>`")
+      assert called Nostrum.Api.create_message(5, "`!q quest <create|edit|status|post|help>`")
     end
 
     mock_test("!q quest <subcommand> (that isn't create) errors if no quest ID is provided", [{Nostrum.Api, :working}]) do

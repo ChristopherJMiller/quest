@@ -23,7 +23,7 @@ defmodule BotTest do
     mock_test("respond to !q", [{Nostrum.Api, :working}]) do
       msg = as_message("!q", 5)
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
-      assert called Nostrum.Api.create_message(5, "`!q init|config|quest|party`")
+      assert called Nostrum.Api.create_message(5, "`!q init|config|quest|party|help`")
     end
   end
 

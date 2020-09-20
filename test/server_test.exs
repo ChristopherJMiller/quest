@@ -17,7 +17,7 @@ defmodule ServerTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      assert called Nostrum.Api.create_message(5, "`!q config <dmrole|postboard> <discord reference to role/channel>`")
+      assert called Nostrum.Api.create_message(5, "`!q config <dmrole|postboard> <discord reference to role/channel>` For further explanation, use `!q config help`")
     end
 
     mock_test("!q config dmrole sets a mentioned role to dm_role", [{Nostrum.Api, :working}]) do

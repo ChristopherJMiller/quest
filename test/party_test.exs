@@ -23,7 +23,7 @@ defmodule PartyTest do
 
       Bot.handle_event({:MESSAGE_CREATE, msg, nil})
 
-      assert called Nostrum.Api.create_message(5, "`!q party <list|create>`")
+      assert called Nostrum.Api.create_message(5, "`!q party <list|create|help>`")
     end
 
     mock_test("!q party create <role> creates a new party using the given discord role", [{Nostrum.Api, :working}]) do
