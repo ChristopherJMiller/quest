@@ -53,7 +53,11 @@ defmodule Quest.PartyManager do
   def format_party_item(party), do: "- " <> mention_party(party) <> ": ID `#{party.id}`\n"
 
   def list_parties(server) do
-    get_server_parties(server) |> List.foldl("Party List:\n", fn x, acc -> acc <> format_party_item(x) end)
+    parties = get_server_parties(server) 
+    case parties do
+      [] -> "There are no parties currently registered. To register a party use `!q party create <Role Name>`"
+      _ -> parties |> List.foldl("Party List:\n", fn x, acc -> acc <> format_party_item(x) end)
+    end
   end
 
   def delete_party_member(msg, quest, user_id) do
@@ -107,8 +111,12 @@ defmodule Quest.PartyManager do
           _ -> "An error occured, please check the bot console."
         end
       "list" -> list_parties(server)
+      "help" -> "The party command is used to register party roles and view registered parties.\n" <>
+                 "-`create`: Use this command to register a party role on your server. This party's ID will be returned. Use: `!q party create <Role Name>`\n" <>
+                 "-`list`: Use this command to list all registered parties on your server. The parties' names and IDs will be displayed. Use `!q party list`.\n" <>
+                 "-`help`: Displays this block of text."
       _ ->
-        "`!q party <list|create>`"
+        "`!q party <list|create|help>`"
     end
   end
 end

@@ -48,17 +48,30 @@ defmodule Quest.ServerManager do
     Logger.info(field)
     case field do
       "dmrole" ->
-        case set_dm_role(server, sub_params) do
-          :ok -> "DM Role Configured"
-          _ -> "An error occured, please check the bot console."
+        case sub_params do
+          [] ->  "Missing Role: Enter the name of the DM role in the command. Example: `!q config dmrole @DM`"
+          _ ->
+            case set_dm_role(server, sub_params) do
+              :ok -> "DM Role Configured"
+              _ -> "An error occured, please check the bot console."
+            end
         end
       "postboard" ->
-        case set_post_channel(server, sub_params) do
-          :ok -> "Post Channel Configured"
-          _ -> "An error occured, please check the bot console."
+        case sub_params do
+          [] -> "Missing Text Channel: Enter the name of the text channel that you want to configure as the postboard. Example: `!q config postboard #quest-board`"
+          _ -> 
+            case set_post_channel(server, sub_params) do
+              :ok -> "Post Channel Configured"
+              _ -> "An error occured, please check the bot console."
+            end
         end
+      "help" ->
+        "The config command is used to configure the DM role and quest board channel for your server. Subcommands include:\n" <>
+        "-`dmrole`: Use this subcommand to choose which Discord role Quest uses as the Dungeon Master Role. Example: `!q config dmrole @Dungeon Master`\n" <>
+        "-`postboard`: Use this subcommand to choose which text channel you want Quest to post quests to. Example: `!q config postboard #quest-board`\n" <>
+        "-`help`: This subcommand will display this block of text."
       _ ->
-        "`!q config <dmrole|postboard> <discord reference to role/channel>`"
+        "`!q config <dmrole|postboard> <discord reference to role/channel>` For further explanation, use `!q config help`"
     end
   end
 end

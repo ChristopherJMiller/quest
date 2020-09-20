@@ -40,7 +40,7 @@ defmodule Quest.Bot do
     :noop
   end
 
-  def help_text(), do: "`!q init|config|quest|party`"
+  def help_text(), do: "`!q init|config|quest|party|help`"
 
   def handle_subcommand(msg, subcommand_params) do
     [subcommand | params] = pad(subcommand_params, 2)
@@ -48,6 +48,12 @@ defmodule Quest.Bot do
     server_inited = ServerManager.get_server_by_id(msg.guild_id)
     response = case {server_inited, subcommand} do
       {nil, nil} -> help_text()
+      {_, "help"} -> "Quest is a bot designed to help managed a West Marches style Dnd Campaign. The following commands can be used after `!q`\n" <>
+                      "-`init`: You must use this command before any others. This initializes your server with Quest.\n" <>
+                      "-`config`: Use this command to configure the DM role and quest board channel on your server.\n" <>
+                      "-`quest`: Use this command to create, edit, and manage quests.\n" <>
+                      "-`party`: Use this command to create party roles and to see a list of existing parties.\n" <>
+                      "-`help`: This will display an explanation for each command. This can be used under each of the aforementioned commands (except for init) as well."
       {_, "init"} ->
         case ServerManager.init_server(msg.guild_id) do
           :ok -> "Server initialized successfully!"

@@ -72,7 +72,7 @@ defmodule PostTest do
       after_db = Post |> Repo.aggregate(:count)
 
       assert after_db - before_db == 0
-      assert called Nostrum.Api.create_message(5, "Failed to Post. The Quest has the following issues:" <> QuestManager.bullet_point(issues))
+      assert called Nostrum.Api.create_message(5, "Failed to Post. The Quest has the following issues:" <> QuestManager.bullet_point(issues) <> "\nTo add these fields to your quest, use `!q quest edit <ID>`")
     end
 
     test "Can recover from a failed DB Insert" do

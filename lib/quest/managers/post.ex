@@ -86,7 +86,7 @@ defmodule Quest.PostManager do
 
     case {post_channel_configured, is_published, is_healthy} do
       {nil, _, _} -> "Server Post Channel not configured, please configure before continuing."
-      {_, _, {:unhealthy, issues}} -> "Failed to Post. The Quest has the following issues:" <> QuestManager.bullet_point(issues)
+      {_, _, {:unhealthy, issues}} -> "Failed to Post. The Quest has the following issues:" <> QuestManager.bullet_point(issues) <> "\nTo add these fields to your quest, use `!q quest edit <ID>`"
       {channel_id, nil, {:healthy, _}} -> make_post(server, quest, channel_id)
       {_, _published_post, _} -> "Quest is already posted"
     end
