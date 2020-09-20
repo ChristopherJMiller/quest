@@ -30,13 +30,20 @@ defmodule Quest.PartyManager do
       |> Repo.insert
   end
 
+  def role_exist(server, role) do
+    case {Integer.parse(role), Api.get_guild_roles(server)} do
+      {{role_id, _}, {:ok, roles}} -> List.foldl(roles, false, fn x, acc -> acc || x.id == role_id end)
+      _ -> false
+    end
+  end
+
+  def create_party(_s, p) when length(p) == 0, do: :help
   def create_party(server_id, params) do
-    [role_str] = params
+    role_str = List.first(params)
     role = role_str |> String.slice(3..-2)
-    server = Kernel.inspect(server_id)
-    case ServerManager.get_server_by_id(server) do
-      nil -> :error
-      _ -> db_create_party(%{server_id: server, role_id: role})
+    case role_exist(server_id, role) do
+      false -> :invalid_role
+      true -> db_create_party(%{server_id: server_id, role_id: role})
     end
   end
 
@@ -85,14 +92,18 @@ defmodule Quest.PartyManager do
     end
   end
 
+  def create_help(), do: "`!q party create <@Mention of Valid Role>`"
+
   def handle_party_command(server, params) do
     [field | result] = pad(params, 2)
     Logger.info(field)
     Logger.info(result)
     case field do
       "create" ->
-        case create_party(server.server_id, result) do
+        case create_party(server.server_id, result |> truncate) do
           {:ok, party} -> "Created Party with ID `#{party.id}`"
+          :invalid_role -> "Please utilize a valid role ID."
+          :help -> create_help()
           _ -> "An error occured, please check the bot console."
         end
       "list" -> list_parties(server)

@@ -48,23 +48,50 @@ defmodule PartyTest do
       assert called Nostrum.Api.create_message(5, "Please initialize the server before interfacing with Quest.")
     end
 
+    mock_test("!q party create <role> fails if the role is not valid", [{Nostrum.Api, :working}]) do
+      ServerManager.init_server(5)
+
+      msg = as_message("!q party create <@&5678>", 5, 5)
+
+      Bot.handle_event({:MESSAGE_CREATE, msg, nil})
+
+      assert called Nostrum.Api.create_message(5, "Please utilize a valid role ID.")
+    end
+
+    mock_test("!q party create <role> display help if no role is passed", [{Nostrum.Api, :working}]) do
+      ServerManager.init_server(5)
+
+      msg = as_message("!q party create", 5, 5)
+
+      Bot.handle_event({:MESSAGE_CREATE, msg, nil})
+
+      assert called Nostrum.Api.create_message(5, PartyManager.create_help())
+    end
+
+    mock_test("!q party create <role> only checks the first role parameter", [{Nostrum.Api, :working}]) do
+      ServerManager.init_server(5)
+
+      msg = as_message("!q party create <@&5678> morewords hello", 5, 5)
+
+      Bot.handle_event({:MESSAGE_CREATE, msg, nil})
+
+      assert called Nostrum.Api.create_message(5, "Please utilize a valid role ID.")
+    end
+
     mock_test("!q party list lists all avaliable parties", [{Nostrum.Api, :working}]) do
       Repo.delete_all(Party)
 
       ServerManager.init_server(5)
       party_one = as_message("!q party create <@&1234>", 5, 5)
-      party_two = as_message("!q party create <@&5678>", 5, 5)
 
       Bot.handle_event({:MESSAGE_CREATE, party_one, nil})
-      Bot.handle_event({:MESSAGE_CREATE, party_two, nil})
 
       party_one_id = Repo.get_by!(Party, role_id: 1234).id
-      party_two_id = Repo.get_by!(Party, role_id: 5678).id
 
       test = as_message("!q party list", 5, 5)
       Bot.handle_event({:MESSAGE_CREATE, test, nil})
 
-      assert called Nostrum.Api.create_message(5, "Party List:\n- <@&1234>: ID `#{party_one_id}`\n- <@&5678>: ID `#{party_two_id}`\n")
+      assert called Nostrum.Api.create_message(5, "Party List:\n- <@&1234>: ID `#{party_one_id}`\n")
     end
   end
 
